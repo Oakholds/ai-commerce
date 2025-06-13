@@ -133,7 +133,7 @@ export function Footer() {
 
         <div className='mt-8 pt-8 border-t border-gray-200'>
           <p className='text-center text-gray-500'>
-            © {new Date().getFullYear()} AI Amazona. All rights reserved.
+            © {new Date().getFullYear()} 03foodsstore. All rights reserved.
           </p>
         </div>
       </div>

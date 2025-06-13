@@ -37,7 +37,7 @@ export function AdminHeader() {
                 className='flex items-center gap-2 text-xl font-bold'
               >
                 <ShoppingBag className='h-6 w-6' />
-                <span>AI Amazona</span>
+                <span>03foodsstore</span>
               </Link>
               <div className='h-6 w-px bg-gray-200' />
               <Link href='/admin' className='text-gray-600 hover:text-gray-900'>

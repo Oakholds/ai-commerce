@@ -8,6 +8,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
+import Link from 'next/link'
 
 async function getLatestProducts() {
   return await prisma.product.findMany({
@@ -159,29 +160,40 @@ export default async function HomePage() {
             <CarouselNext className='right-4 md:right-8 bg-white/90 hover:bg-white border-2 border-orange-200 text-orange-700 h-12 w-12 shadow-lg' />
           </Carousel>
 
-          {/* Featured Categories */}
-          <div className='mt-12 grid grid-cols-2 md:grid-cols-4 gap-4'>
-            <div className='bg-gradient-to-br from-yellow-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg'>
-              <div className='text-3xl mb-2'>🍠</div>
-              <h3 className='font-semibold'>Yam & Fufu</h3>
-              <p className='text-sm opacity-90'>Traditional staples</p>
-            </div>
-            <div className='bg-gradient-to-br from-red-500 to-pink-600 p-6 rounded-2xl text-white text-center shadow-lg'>
-              <div className='text-3xl mb-2'>🌶️</div>
-              <h3 className='font-semibold'>Spices & Seasonings</h3>
-              <p className='text-sm opacity-90'>Rich flavors</p>
-            </div>
-            <div className='bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl text-white text-center shadow-lg'>
-              <div className='text-3xl mb-2'>🍌</div>
-              <h3 className='font-semibold'>Plantain Chips</h3>
-              <p className='text-sm opacity-90'>Healthy snacks</p>
-            </div>
-            <div className='bg-gradient-to-br from-blue-500 to-teal-600 p-6 rounded-2xl text-white text-center shadow-lg'>
-              <div className='text-3xl mb-2'>🥤</div>
-              <h3 className='font-semibeal'>Beverages</h3>
-              <p className='text-sm opacity-90'>Refreshing drinks</p>
-            </div>
-          </div>
+{/* Featured Categories */}
+<div className='mt-12 grid grid-cols-2 md:grid-cols-4 gap-4'>
+  <Link href='/products?category=cmctvcj63000dt05i32h43atb'>
+    <div className='cursor-pointer bg-gradient-to-br from-yellow-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg'>
+      <div className='text-3xl mb-2'>🍠</div>
+      <h3 className='font-semibold'>Yam & Fufu</h3>
+      <p className='text-sm opacity-90'>Traditional staples</p>
+    </div>
+  </Link>
+
+  <Link href='/products?category=cmctvce9c0003t05i1tkql98j'>
+    <div className='cursor-pointer bg-gradient-to-br from-red-500 to-pink-600 p-6 rounded-2xl text-white text-center shadow-lg'>
+      <div className='text-3xl mb-2'>🌶️</div>
+      <h3 className='font-semibold'>Spices & Seasonings</h3>
+      <p className='text-sm opacity-90'>Rich flavors</p>
+    </div>
+  </Link>
+
+  <Link href='/products?category=cmctvck5g000ft05i81kwbloz'>
+    <div className='cursor-pointer bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl text-white text-center shadow-lg'>
+      <div className='text-3xl mb-2'>🍌</div>
+      <h3 className='font-semibold'>Plantain Chips</h3>
+      <p className='text-sm opacity-90'>Healthy snacks</p>
+    </div>
+  </Link>
+
+  <Link href='/products?category=cmctvckmg000gt05ih1m8sx9w'>
+    <div className='cursor-pointer bg-gradient-to-br from-blue-500 to-teal-600 p-6 rounded-2xl text-white text-center shadow-lg'>
+      <div className='text-3xl mb-2'>🥤</div>
+      <h3 className='font-semibold'>Beverages</h3>
+      <p className='text-sm opacity-90'>Refreshing drinks</p>
+    </div>
+  </Link>
+</div>
         </div>
       </section>
 

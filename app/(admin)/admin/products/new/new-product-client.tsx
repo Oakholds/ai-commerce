@@ -59,11 +59,11 @@ export default function NewProductPage({ categories }: NewProductPageProps) {
     }
 
     // Validate file sizes (5MB max)
-    const maxSize = 5 * 1024 * 1024
+    const maxSize = 1 * 1024 * 1024
     const oversizedFiles = files.filter(file => file.size > maxSize)
     
     if (oversizedFiles.length > 0) {
-      setError('Please upload images smaller than 5MB')
+      setError('Please upload images smaller than 1MB go to https://tinypng.com to compress image')
       return
     }
 

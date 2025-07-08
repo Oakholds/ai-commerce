@@ -8,7 +8,6 @@ import {
   CheckCircle, 
   DollarSign, 
   TrendingUp,
-  Users,
   Package
 } from 'lucide-react'
 

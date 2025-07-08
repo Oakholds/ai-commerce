@@ -71,6 +71,7 @@ export default async function OrdersPage() {
                         className='flex items-center justify-between py-4'
                       >
                         <div className='flex items-center space-x-4'>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={item.product.images[0]}
                             alt={item.product.name}

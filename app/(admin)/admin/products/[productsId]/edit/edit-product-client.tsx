@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowLeft, Upload, X } from 'lucide-react'
@@ -162,7 +162,7 @@ export default function EditProductPage({ product, categories }: EditProductPage
             const errorData = JSON.parse(errorText)
             throw new Error(errorData.error || 'Failed to update product')
           } catch (parseError) {
-            throw new Error(`Server error: ${response.status} ${response.statusText}`)
+            throw new Error(`Server error: ${response.status} ${response.statusText}. ${parseError instanceof Error ? parseError.message : 'Unknown error'}`)
           }
         }
 

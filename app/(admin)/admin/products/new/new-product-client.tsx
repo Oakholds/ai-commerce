@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
+import { ArrowLeft, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -117,7 +117,7 @@ export default function NewProductPage({ categories }: NewProductPageProps) {
         submitData.append('categoryId', formData.categoryId)
         submitData.append('stock', formData.stock)
         
-        imageFiles.forEach((file, index) => {
+        imageFiles.forEach((file) => {
           submitData.append(`images`, file)
         })
 

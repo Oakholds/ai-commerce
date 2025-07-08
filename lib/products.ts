@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 // import { Product } from '@prisma/client'
-import { startOfDay, subDays, format } from 'date-fns'
+// import { startOfDay, subDays, format } from 'date-fns'
 
 interface GetProductsParams {
   page?: number
@@ -12,26 +13,26 @@ interface GetProductsParams {
   order?: string
 }
 
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  images: string[]
-  stock: number
-  category: {
-    id: string
-    name: string
-  }
-  createdAt: Date
-  updatedAt: Date
-}
+// interface Product {
+//   id: string
+//   name: string
+//   description: string
+//   price: number
+//   images: string[]
+//   stock: number
+//   category: {
+//     id: string
+//     name: string
+//   }
+//   createdAt: Date
+//   updatedAt: Date
+// }
 
-interface ProductsResult {
-  products: Product[]
-  totalPages: number
-  totalCount: number
-}
+// interface ProductsResult {
+//   products: Product[]
+//   totalPages: number
+//   totalCount: number
+// }
 
 export interface ProductsStatsData {
   totalProducts: number
@@ -52,7 +53,6 @@ interface GetProductsParams {
   sort?: string
   order?: string
 }
-
 export async function getProducts({
   page = 1,
   limit = 20,
@@ -62,7 +62,7 @@ export async function getProducts({
   sort = 'createdAt',
   order = 'desc',
 }: GetProductsParams) {
-  const where: any = {}
+  const where: Prisma.ProductWhereInput = {}
 
   // Search by name or description
   if (search) {
@@ -175,7 +175,6 @@ export async function getProductsStatsOptimized(): Promise<ProductsStatsData> {
   try {
     const [
       totalProducts,
-      totalValueResult,
       lowStockCount,
       outOfStockCount,
       averagePriceResult,
@@ -184,18 +183,6 @@ export async function getProductsStatsOptimized(): Promise<ProductsStatsData> {
     ] = await Promise.all([
       // Total products count
       prisma.product.count(),
-      
-      // Total value calculation
-      prisma.product.aggregate({
-        _sum: {
-          price: true,
-        },
-        where: {
-          stock: {
-            gt: 0,
-          },
-        },
-      }),
       
       // Low stock count (stock between 1-10)
       prisma.product.count({

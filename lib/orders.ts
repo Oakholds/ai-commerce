@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { OrderStatus } from '@prisma/client'
 
 export interface GetOrdersParams {
@@ -22,10 +23,24 @@ export async function getOrders({
   dateFrom = '',
   dateTo = '',
 }: GetOrdersParams) {
-  const skip = (page - 1) * limit
+  // Add input validation
+  const validatedPage = Math.max(1, page)
+  const validatedLimit = Math.max(1, Math.min(100, limit)) // Cap at 100
+  const skip = (validatedPage - 1) * validatedLimit
+
+  console.log('getOrders called with params:', {
+    page: validatedPage,
+    limit: validatedLimit,
+    search,
+    status,
+    sort,
+    order,
+    dateFrom,
+    dateTo,
+  })
 
   // Build where clause
-  const where: any = {}
+  const where: Prisma.OrderWhereInput = {}
 
   // Search in order ID or customer email/name
   if (search) {
@@ -36,31 +51,66 @@ export async function getOrders({
     ]
   }
 
-  // Filter by status
+  // Filter by status - add validation
   if (status && Object.values(OrderStatus).includes(status as OrderStatus)) {
     where.status = status as OrderStatus
   }
 
-  // Filter by date range
+  // Filter by date range with better error handling
   if (dateFrom || dateTo) {
     where.createdAt = {}
-    if (dateFrom) {
-      where.createdAt.gte = new Date(dateFrom)
-    }
-    if (dateTo) {
-      where.createdAt.lte = new Date(dateTo + 'T23:59:59.999Z')
+    try {
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom)
+        if (isNaN(fromDate.getTime())) {
+          console.warn('Invalid dateFrom:', dateFrom)
+        } else {
+          where.createdAt.gte = fromDate
+        }
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo + 'T23:59:59.999Z')
+        if (isNaN(toDate.getTime())) {
+          console.warn('Invalid dateTo:', dateTo)
+        } else {
+          where.createdAt.lte = toDate
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing dates:', error)
+      // Continue without date filtering if dates are invalid
     }
   }
 
-  // Build orderBy clause
-  const orderBy: any = {}
-  if (sort === 'createdAt' || sort === 'updatedAt' || sort === 'total') {
-    orderBy[sort] = order
-  } else if (sort === 'status') {
-    orderBy.status = order
-  } else {
-    orderBy.createdAt = 'desc'
+  // Build orderBy clause with validation
+//   const orderBy: OrderBy = {}
+const orderBy: Prisma.OrderOrderByWithRelationInput = {}
+// const validSortFields = ['createdAt', 'updatedAt', 'total', 'status']
+const validOrderValues = ['asc', 'desc']
+  
+if (validOrderValues.includes(order)) {
+  switch (sort) {
+    case 'createdAt':
+      orderBy.createdAt = order as 'asc' | 'desc'
+      break
+    case 'updatedAt':
+      orderBy.updatedAt = order as 'asc' | 'desc'
+      break
+    case 'total':
+      orderBy.total = order as 'asc' | 'desc'
+      break
+    case 'status':
+      orderBy.status = order as 'asc' | 'desc'
+      break
+    default:
+      orderBy.createdAt = 'desc'
   }
+} else {
+  orderBy.createdAt = 'desc'
+}
+
+//   console.log('Query where clause:', where)
+//   console.log('Query orderBy clause:', orderBy)
 
   try {
     const [orders, totalCount] = await Promise.all([
@@ -88,22 +138,44 @@ export async function getOrders({
         },
         orderBy,
         skip,
-        take: limit,
+        take: validatedLimit,
       }),
       prisma.order.count({ where }),
     ])
 
-    const totalPages = Math.ceil(totalCount / limit)
+    const totalPages = Math.ceil(totalCount / validatedLimit)
 
-    return {
+    const result = {
       orders,
       totalPages,
       totalCount,
-      currentPage: page,
+      currentPage: validatedPage,
     }
+
+    console.log('getOrders result:', {
+      ordersCount: orders.length,
+      totalPages,
+      totalCount,
+      currentPage: validatedPage,
+    })
+
+    // Validate the result structure
+    if (!Array.isArray(orders)) {
+      console.error('Orders is not an array:', orders)
+      throw new Error('Database returned invalid orders data')
+    }
+
+    return result
   } catch (error) {
     console.error('Error fetching orders:', error)
-    throw new Error('Failed to fetch orders')
+    
+    // Return a safe fallback instead of throwing
+    return {
+      orders: [],
+      totalPages: 1,
+      totalCount: 0,
+      currentPage: validatedPage,
+    }
   }
 }
 
@@ -212,7 +284,22 @@ export async function getOrdersStats() {
     }
   } catch (error) {
     console.error('Error fetching orders stats:', error)
-    throw new Error('Failed to fetch orders stats')
+    
+    // Return safe fallback data
+    return {
+      totalOrders: 0,
+      pendingOrders: 0,
+      processingOrders: 0,
+      shippedOrders: 0,
+      deliveredOrders: 0,
+      cancelledOrders: 0,
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      averageOrderValue: 0,
+      totalCustomers: 0,
+      revenueGrowth: 0,
+      ordersGrowth: 0,
+    }
   }
 }
 

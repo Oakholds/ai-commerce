@@ -4,9 +4,9 @@ import prisma from '@/lib/prisma'
 import EditProductPage from './edit-product-client'
 
 interface EditProductPageProps {
-  params: {
+  params: Promise<{
     productsId: string
-  }
+  }>
 }
 
 export default async function EditProductServerPage({ params }: EditProductPageProps) {
@@ -20,8 +20,11 @@ export default async function EditProductServerPage({ params }: EditProductPageP
     redirect('/unauthorized')
   }
 
+  // Await the params before using them
+  const { productsId } = await params
+
   const product = await prisma.product.findUnique({
-    where: { id: params.productsId },
+    where: { id: productsId },
     include: { category: true },
   })
 

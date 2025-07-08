@@ -2,7 +2,7 @@ import { getRevenueDataai, getOrderStatsai, getRecentOrdersai } from '@/lib/anal
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default async function AnalyticsPage() {
-  const [revenueData, orderStats, recentOrders] = await Promise.all([
+  const [revenueData, orderStats] = await Promise.all([
     getRevenueDataai(),
     getOrderStatsai(),
     getRecentOrdersai(5),

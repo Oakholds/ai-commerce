@@ -12,30 +12,30 @@ await prisma.order.deleteMany()
 await prisma.product.deleteMany()
 await prisma.category.deleteMany()
   // Create admin user
-  // const adminPassword = await hash('admin123', 12)
-  // const admin = await prisma.user.upsert({
-  //   where: { email: 'admin@example.com' },
-  //   update: {},
-  //   create: {
-  //     email: 'admin@example.com',
-  //     name: 'Admin User',
-  //     password: adminPassword,
-  //     role: 'ADMIN',
-  //   },
-  // })
+  const adminPassword = await hash('admin123', 12)
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {},
+    create: {
+      email: 'admin@example.com',
+      name: 'Admin User',
+      password: adminPassword,
+      role: 'ADMIN',
+    },
+  })
 
   // Create regular user
-  // const userPassword = await hash('user123', 12)
-  // const user = await prisma.user.upsert({
-  //   where: { email: 'user@example.com' },
-  //   update: {},
-  //   create: {
-  //     email: 'user@example.com',
-  //     name: 'Regular User',
-  //     password: userPassword,
-  //     role: 'USER',
-  //   },
-  // })
+  const userPassword = await hash('user123', 12)
+  const user = await prisma.user.upsert({
+    where: { email: 'user@example.com' },
+    update: {},
+    create: {
+      email: 'user@example.com',
+      name: 'Regular User',
+      password: userPassword,
+      role: 'USER',
+    },
+  })
 
   // Create categories
   const categories = [
@@ -366,68 +366,68 @@ await prisma.category.deleteMany()
   }
 
   // Create a sample address for orders
-  // const address = await prisma.address.upsert({
-  //   where: { id: 'sample-address' },
-  //   update: {},
-  //   create: {
-  //     id: 'sample-address',
-  //     userId: user.id,
-  //     street: '123 Victoria Island',
-  //     city: 'Lagos',
-  //     state: 'Lagos State',
-  //     postalCode: '101001',
-  //     country: 'Nigeria',
-  //     isDefault: true,
-  //   },
-  // })
+  const address = await prisma.address.upsert({
+    where: { id: 'sample-address' },
+    update: {},
+    create: {
+      id: 'sample-address',
+      userId: user.id,
+      street: '123 Victoria Island',
+      city: 'Lagos',
+      state: 'Lagos State',
+      postalCode: '101001',
+      country: 'Nigeria',
+      isDefault: true,
+    },
+  })
 
-  // // Create sample orders
-  // const createdProducts = await prisma.product.findMany()
-  // const statuses = Object.values(OrderStatus)
+  // Create sample orders
+  const createdProducts = await prisma.product.findMany()
+  const statuses = Object.values(OrderStatus)
 
-  // // Generate 50 sample orders
-  // for (let i = 0; i < 50; i++) {
-  //   // Generate a random date within the last 30 days
-  //   const randomDays = Math.floor(Math.random() * 30)
-  //   const randomHours = Math.floor(Math.random() * 24)
-  //   const randomMinutes = Math.floor(Math.random() * 60)
-  //   const orderDate = addMinutes(
-  //     addHours(subDays(new Date(), randomDays), randomHours),
-  //     randomMinutes
-  //   )
+  // Generate 50 sample orders
+  for (let i = 0; i < 50; i++) {
+    // Generate a random date within the last 30 days
+    const randomDays = Math.floor(Math.random() * 30)
+    const randomHours = Math.floor(Math.random() * 24)
+    const randomMinutes = Math.floor(Math.random() * 60)
+    const orderDate = addMinutes(
+      addHours(subDays(new Date(), randomDays), randomHours),
+      randomMinutes
+    )
 
-  //   // Randomly select 2-4 products for the order
-  //   const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items
-  //   const selectedProducts = [...createdProducts]
-  //     .sort(() => 0.5 - Math.random())
-  //     .slice(0, numItems)
+    // Randomly select 2-4 products for the order
+    const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items
+    const selectedProducts = [...createdProducts]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, numItems)
 
-  //   // Calculate total order value
-  //   const orderItems = selectedProducts.map((product) => ({
-  //     productId: product.id,
-  //     quantity: Math.floor(Math.random() * 3) + 1, // 1-3 quantity
-  //     price: product.price,
-  //   }))
+    // Calculate total order value
+    const orderItems = selectedProducts.map((product) => ({
+      productId: product.id,
+      quantity: Math.floor(Math.random() * 3) + 1, // 1-3 quantity
+      price: product.price,
+    }))
 
-  //   const total = orderItems.reduce(
-  //     (sum, item) => sum + item.price * item.quantity,
-  //     0
-  //   )
+    const total = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    )
 
-  //   // Create the order
-  //   await prisma.order.create({
-  //     data: {
-  //       userId: user.id,
-  //       addressId: address.id,
-  //       status: statuses[Math.floor(Math.random() * statuses.length)],
-  //       total,
-  //       createdAt: orderDate,
-  //       items: {
-  //         create: orderItems,
-  //       },
-  //     },
-  //   })
-  // }
+    // Create the order
+    await prisma.order.create({
+      data: {
+        userId: user.id,
+        addressId: address.id,
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        total,
+        createdAt: orderDate,
+        items: {
+          create: orderItems,
+        },
+      },
+    })
+  }
 
   console.log(`Seed data created successfully:`)
   console.log(`- ${categories.length} categories`)

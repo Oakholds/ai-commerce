@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { uploadToCloudinary } from '@/lib/cloudinary'
 
-export async function PATCH(request: NextRequest, { params }: { params: { productsId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ productsId: string }> }) {
   try {
     const session = await auth()
 
@@ -15,8 +15,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { produc
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Fixed: Use productsId instead of productId
-    const productId = params.productsId
+    // Await the params before using them
+    const { productsId } = await params
+    const productId = productsId
 
     // Validate product exists
     const existingProduct = await prisma.product.findUnique({ where: { id: productId } })
@@ -52,8 +53,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { produc
         if (!file || typeof file.arrayBuffer !== 'function') continue
         const buffer = Buffer.from(await file.arrayBuffer())
 
-        const fallbackName = `image-${Date.now()}`
-        const fileName = file.name?.split('.')[0] || fallbackName
+        // const fallbackName = `image-${Date.now()}`
+        // const fileName = file.name?.split('.')[0] || fallbackName
 
         const uploadResult = await uploadToCloudinary(buffer, file.name)
         imageUrls.push(uploadResult.secure_url)

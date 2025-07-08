@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { OrdersPagination } from '@/components/admin/orders/orders-pagination'
-import { updateOrderStatusAction } from '@/app/actions/orders' // You'll need to create this file
+import { updateOrderStatusAction } from '@/app/actions/orders'
 import { toast } from 'sonner'
 
 interface Order {
@@ -31,7 +31,7 @@ interface Order {
     id: string
     name: string | null
     email: string
-  }
+  } | null
   items: {
     id: string
     quantity: number
@@ -52,8 +52,8 @@ interface Order {
   }
   total: number
   stripePaymentId: string | null
-  createdAt: Date // Changed from string to Date
-  updatedAt: Date // Changed from string to Date
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface OrdersTableProps {
@@ -92,8 +92,26 @@ const statusConfig = {
   },
 }
 
-export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageSize = 20 }: OrdersTableProps) {
+export function OrdersTable({ 
+  orders = [], // Add default empty array
+  totalPages = 1, 
+  currentPage = 1, 
+  totalCount, 
+  pageSize = 20 
+}: OrdersTableProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
+
+  // Early return if orders is not an array or is empty
+  if (!Array.isArray(orders)) {
+    console.error('Orders prop is not an array:', orders)
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Error: Invalid orders data</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
     setIsUpdating(orderId)
@@ -102,12 +120,11 @@ export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageS
       
       if (result.success) {
         toast.success(result.message)
-        // The page will automatically revalidate due to revalidatePath in the server action
       } else {
         toast.error(result.message)
       }
     } catch (error) {
-      toast.error('Failed to update order status')
+      toast.error(`Failed to update order status: ${error}`)
     } finally {
       setIsUpdating(null)
     }
@@ -120,8 +137,8 @@ export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageS
     }).format(amount)
   }
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -131,10 +148,41 @@ export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageS
   }
 
   const getItemsPreview = (items: Order['items']) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      return 'No items'
+    }
     if (items.length === 1) {
       return `${items[0].quantity}x ${items[0].product.name}`
     }
     return `${items.length} items`
+  }
+
+  // Show empty state if no orders
+  if (orders.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8">
+                <p className="text-muted-foreground">No orders found</p>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    )
   }
 
   return (
@@ -164,9 +212,9 @@ export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageS
               </TableCell>
               <TableCell>
                 <div className="flex flex-col">
-                  <span className="font-medium">{order.user.name || 'N/A'}</span>
+                  <span className="font-medium">{order.user?.name || 'N/A'}</span>
                   <span className="text-sm text-muted-foreground">
-                    {order.user.email}
+                    {order.user?.email || 'N/A'}
                   </span>
                 </div>
               </TableCell>
@@ -174,7 +222,9 @@ export function OrdersTable({ orders, totalPages, currentPage, totalCount, pageS
                 <div className="flex flex-col">
                   <span className="font-medium">{getItemsPreview(order.items)}</span>
                   <span className="text-sm text-muted-foreground">
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} total items
+                    {Array.isArray(order.items) 
+                      ? order.items.reduce((sum, item) => sum + item.quantity, 0) 
+                      : 0} total items
                   </span>
                 </div>
               </TableCell>

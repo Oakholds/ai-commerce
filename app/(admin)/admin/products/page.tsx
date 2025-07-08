@@ -6,7 +6,7 @@ import { ProductsTable } from '@/components/admin/products/products-table'
 import { ProductsFiltersWrapper } from '@/components/admin/products/products-filters-wrapper'
 import { SearchForm } from '@/components/admin/products/search-form'
 
-import { ProductsStats } from '@/components/admin/products/products.stats'
+// import { ProductsStats } from '@/components/admin/products/products.stats'
 import { getProducts, getProductsStats } from '@/lib/products'
 import { ProductsStatsWrapper } from '@/components/admin/products/products.stats-wrapper'
 

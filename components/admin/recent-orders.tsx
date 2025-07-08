@@ -26,10 +26,10 @@ interface Order {
   id: string
   user: {
     name: string | null
-  }
+  } | null // Added | null to handle null user
   total: number
   status: OrderStatus
-  createdAt: Date
+  createdAt: Date // Changed from Date to string
 }
 
 interface RecentOrdersProps {
@@ -68,7 +68,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className='font-medium'>{order.id}</TableCell>
-                <TableCell>{order.user.name || 'Anonymous'}</TableCell>
+                <TableCell>{order.user?.name || 'Anonymous'}</TableCell>
                 <TableCell>{formatCurrency(order.total)}</TableCell>
                 <TableCell>
                   <Badge

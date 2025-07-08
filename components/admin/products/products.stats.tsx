@@ -106,7 +106,7 @@ export function ProductsStats({ data }: ProductsStatsProps) {
     })
   }
 
-  const allStats = [...stats, ...additionalStats]
+  // const allStats = [...stats, ...additionalStats]
 
   return (
     <div className="space-y-4">

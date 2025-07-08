@@ -40,6 +40,7 @@ export default async function HomePage() {
       badge: 'Authentic African',
       color: 'from-amber-600 to-orange-700'
     },
+    
     {
       image: 'https://res.cloudinary.com/dl3xqgqde/image/upload/v1751935151/spice_pj6edu.png',
       title: 'Traditional Spices & Seasonings',
@@ -47,6 +48,7 @@ export default async function HomePage() {
       badge: 'Rich Flavors',
       color: 'from-red-600 to-pink-700'
     },
+
     {
       image: 'https://res.cloudinary.com/dl3xqgqde/image/upload/v1751935150/plantain_pdqzyj.png',
       title: 'Plantain Chips & Snacks',

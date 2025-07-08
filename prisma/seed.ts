@@ -357,7 +357,7 @@ await prisma.category.deleteMany()
         description: `Premium quality ${product.name.toLowerCase()} sourced from trusted suppliers`,
         price: product.price,
         images: [
-          `/images/default1.jpg`
+          `https://res.cloudinary.com/dl3xqgqde/image/upload/v1751935149/default1_pbh9zi.jpg`
         ],
         categoryId: categoryId,
         stock: product.stock,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+
 import {
   PayPalScriptProvider,
   PayPalButtons,
@@ -49,7 +49,7 @@ function PayPalButtonWrapper({ orderId, amount }: PaymentFormProps) {
     }
   }
 
-  const onApprove = async (data: any) => {
+  const onApprove = async (data: { orderID: string }) => {
     try {
       const response = await fetch('/api/paypal/capture-order', {
         method: 'POST',
@@ -87,7 +87,7 @@ function PayPalButtonWrapper({ orderId, amount }: PaymentFormProps) {
     }
   }
 
-  const onError = (err: any) => {
+  const onError = (err: Record<string, unknown>) => {
     console.error('PayPal error:', err)
     toast({
       title: 'Payment Error',

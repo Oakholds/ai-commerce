@@ -48,7 +48,7 @@ export default async function PaymentPage({ params }: PageProps) {
   const subtotal = order.total
   const shipping = 10 // Fixed shipping cost
   const tax = subtotal * 0.1 // 10% tax
-  const finalAmount = subtotal
+  const finalAmount = subtotal + shipping + tax
 
   return (
     <div className='container max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8'>

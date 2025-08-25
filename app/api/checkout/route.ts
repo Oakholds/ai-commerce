@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/checkout/route.ts
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import Stripe from 'stripe'
 import { auth } from '@/auth'
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: Request) {
   try {
@@ -21,27 +18,18 @@ export async function POST(req: Request) {
       return new NextResponse('Bad request', { status: 400 })
     }
 
-    // Create Stripe payment intent
-    const lineItems = items.map((item: any) => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.name,
-          images: [item.image],
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }))
+    // Calculate subtotal
+    const subtotal = items.reduce(
+      (total: number, item: any) => total + item.price * item.quantity,
+      0
+    )
 
+    // Create order in database
     const order = await prisma.order.create({
       data: {
         userId: session.user.id,
         status: 'PENDING',
-        total: items.reduce(
-          (total: number, item: any) => total + item.price * item.quantity,
-          0
-        ),
+        total: subtotal,
         addressId: shippingAddress.id,
         items: {
           create: items.map((item: any) => ({
@@ -53,19 +41,14 @@ export async function POST(req: Request) {
       },
     })
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(
-        (order.total + order.total * 0.1 + 10) * 100 // Total + 10% tax + $10 shipping
-      ),
-      currency: 'usd',
-      metadata: {
-        orderId: order.id,
-      },
-    })
+    // Calculate final amount including tax and shipping
+    const shipping = 10 // Fixed shipping cost
+    const tax = subtotal * 0.1 // 10% tax
+    const finalAmount = subtotal + shipping + tax
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
       orderId: order.id,
+      amount: finalAmount,
     })
   } catch (error) {
     console.error('[CHECKOUT_ERROR]', error)

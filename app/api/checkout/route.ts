@@ -3,6 +3,17 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 
+interface CheckoutItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
+
+interface ShippingAddress {
+  id: string
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth()
@@ -20,7 +31,7 @@ export async function POST(req: Request) {
 
     // Calculate subtotal
     const subtotal = items.reduce(
-      (total: number, item: any) => total + item.price * item.quantity,
+      (total: number, item: CheckoutItem) => total + item.price * item.quantity,
       0
     )
 
@@ -32,7 +43,7 @@ export async function POST(req: Request) {
         total: subtotal,
         addressId: shippingAddress.id,
         items: {
-          create: items.map((item: any) => ({
+          create: items.map((item: CheckoutItem) => ({
             productId: item.id,
             quantity: item.quantity,
             price: item.price,

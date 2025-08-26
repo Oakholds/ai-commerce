@@ -10,10 +10,6 @@ interface CheckoutItem {
   quantity: number
 }
 
-interface ShippingAddress {
-  id: string
-}
-
 export async function POST(req: Request) {
   try {
     const session = await auth()

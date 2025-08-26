@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 
-const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.paypal.com' 
-  : 'https://api.sandbox.paypal.com'
+const PAYPAL_BASE_URL = 'https://api.paypal.com' 
+
 
 async function getPayPalAccessToken() {
   const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {

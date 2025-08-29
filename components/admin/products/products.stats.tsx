@@ -1,4 +1,4 @@
-import { Package, TrendingUp, AlertTriangle, DollarSign, BarChart3, Calendar, Target } from 'lucide-react'
+import { Package, TrendingUp, AlertTriangle, PoundSterling, BarChart3, Calendar, Target } from 'lucide-react'
 
 interface ProductsStatsData {
   totalProducts: number
@@ -18,7 +18,7 @@ export function ProductsStats({ data }: ProductsStatsProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GBP',
     }).format(value)
   }
 
@@ -39,7 +39,7 @@ export function ProductsStats({ data }: ProductsStatsProps) {
     {
       title: 'Total Value',
       value: formatCurrency(data.totalValue),
-      icon: DollarSign,
+      icon: PoundSterling,
       description: 'Total inventory value',
       color: 'text-green-600',
       bgColor: 'bg-green-50',

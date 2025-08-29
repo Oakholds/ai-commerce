@@ -208,7 +208,7 @@ export default function NewProductPage({ categories }: NewProductPageProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price">Price (USD) *</Label>
+                    <Label htmlFor="price">Price (GBP) *</Label>
                     <Input
                       id="price"
                       type="number"

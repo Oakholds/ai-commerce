@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   TrendingUp, 
   TrendingDown, 
-  DollarSign, 
+  PoundSterling, 
   ShoppingCart, 
   Users, 
   Eye,
@@ -40,9 +40,9 @@ export function AnalyticsCards({ data }: AnalyticsCardsProps) {
   const cards = [
     {
       title: 'Total Revenue',
-      value: `$${data.totalRevenue.toLocaleString()}`,
+      value: `£${data.totalRevenue.toLocaleString()}`,
       change: data.revenueChange,
-      icon: DollarSign,
+      icon: PoundSterling,
       color: 'text-green-600',
     },
     {
@@ -75,9 +75,9 @@ export function AnalyticsCards({ data }: AnalyticsCardsProps) {
     },
     {
       title: 'Avg Order Value',
-      value: `$${data.avgOrderValue.toFixed(2)}`,
+      value: `£${data.avgOrderValue.toFixed(2)}`,
       change: data.avgOrderValueChange,
-      icon: DollarSign,
+      icon: PoundSterling,
       color: 'text-green-600',
     },
     {

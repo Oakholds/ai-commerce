@@ -84,19 +84,19 @@ export async function POST(req: Request) {
       purchase_units: [
         {
           amount: {
-            currency_code: 'USD',
+            currency_code: 'GBP',
             value: total,
             breakdown: {
               item_total: {
-                currency_code: 'USD',
+                currency_code: 'GBP',
                 value: itemTotal.toFixed(2),
               },
               shipping: {
-                currency_code: 'USD',
+                currency_code: 'GBP',
                 value: shipping.toFixed(2),
               },
               tax_total: {
-                currency_code: 'USD',
+                currency_code: 'GBP',
                 value: tax.toFixed(2),
               },
             },
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
           items: order.items.map((item) => ({
             name: item.product.name,
             unit_amount: {
-              currency_code: 'USD',
+              currency_code: 'GBP',
               value: item.price.toFixed(2),
             },
             quantity: item.quantity.toString(),
@@ -154,3 +154,5 @@ export async function POST(req: Request) {
     return new NextResponse('Internal error', { status: 500 })
   }
 }
+
+

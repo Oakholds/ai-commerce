@@ -83,7 +83,7 @@ export function ShippingForm() {
       const { orderId } = await response.json()
 
       // Clear cart after successful order creation
-      cart.clearCart()
+      // cart.clearCart()
 
       // Redirect to payment page
       router.push(`/payment/${orderId}`)

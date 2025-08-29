@@ -14,6 +14,7 @@ import { Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
+
 export default function CartPage() {
   const cart = useCart()
 
@@ -67,7 +68,7 @@ export default function CartPage() {
                   {item.name}
                 </Link>
                 <span className='text-muted-foreground'>
-                  ${item.price.toFixed(2)}
+                  £{item.price.toFixed(2)}
                 </span>
               </div>
               <div className='flex items-center gap-2'>
@@ -93,7 +94,7 @@ export default function CartPage() {
               </div>
               <div className='text-right min-w-[100px]'>
                 <div className='font-medium'>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  £{(item.price * item.quantity).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -101,7 +102,7 @@ export default function CartPage() {
         </CardContent>
         <CardFooter className='flex justify-between'>
           <div className='text-lg font-bold'>
-            Total: ${cart.total.toFixed(2)}
+            Total: £{cart.getTotal().toFixed(2)}
           </div>
           <div className='flex gap-2'>
             <Button variant='outline' asChild>

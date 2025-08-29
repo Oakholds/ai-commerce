@@ -6,7 +6,7 @@ import {
   Clock, 
   Truck, 
   CheckCircle, 
-  DollarSign, 
+  PoundSterling, 
   TrendingUp,
   Package
 } from 'lucide-react'
@@ -34,7 +34,7 @@ export function OrdersStats({ data }: OrdersStatsProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'GBP',
     }).format(amount)
   }
 
@@ -53,7 +53,7 @@ export function OrdersStats({ data }: OrdersStatsProps) {
     {
       title: 'Total Revenue',
       value: formatCurrency(data.totalRevenue),
-      icon: DollarSign,
+      icon: PoundSterling,
       description: `${formatPercentage(data.revenueGrowth)} from last month`,
       trend: data.revenueGrowth > 0 ? 'positive' : 'negative'
     },

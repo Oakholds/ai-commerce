@@ -83,7 +83,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
 
-      <div className='text-2xl font-bold'>${product.price.toFixed(2)}</div>
+      <div className='text-2xl font-bold'>£{product.price.toFixed(2)}</div>
 
       <div className='prose prose-sm'>
         <p>{product.description}</p>

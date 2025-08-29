@@ -12,7 +12,7 @@ export function Footer() {
             <ul className='space-y-2'>
               <li>
                 <Link
-                  href='/search'
+                  href='/products'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   All Products
@@ -20,7 +20,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href='/categories'
+                  href='/products'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   Categories
@@ -28,10 +28,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href='/deals'
+                  href='/products'
                   className='text-gray-600 hover:text-gray-900'
                 >
-                  Deals
+                  Grains
                 </Link>
               </li>
             </ul>
@@ -43,7 +43,8 @@ export function Footer() {
             <ul className='space-y-2'>
               <li>
                 <Link
-                  href='/contact'
+                  href='mailto:darasimiadebola10@gmail.com'
+                  
                   className='text-gray-600 hover:text-gray-900'
                 >
                   Contact Us
@@ -51,7 +52,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href='/shipping'
+                  href='#'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   Shipping Information
@@ -59,7 +60,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href='/returns'
+                  href='#'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   Returns & Exchanges
@@ -74,7 +75,7 @@ export function Footer() {
             <ul className='space-y-2'>
               <li>
                 <Link
-                  href='/about'
+                  href='/'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   About Us
@@ -82,15 +83,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href='/careers'
-                  className='text-gray-600 hover:text-gray-900'
-                >
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href='/privacy'
+                  href='#'
                   className='text-gray-600 hover:text-gray-900'
                 >
                   Privacy Policy

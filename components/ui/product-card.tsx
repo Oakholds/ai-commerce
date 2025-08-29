@@ -100,7 +100,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           </div>
           <div className='mt-2 text-xl font-bold'>
-            ${product.price.toFixed(2)}
+            £{product.price.toFixed(2)}
           </div>
         </CardContent>
       </Link>

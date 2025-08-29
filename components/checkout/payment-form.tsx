@@ -8,6 +8,7 @@ import {
 } from '@paypal/react-paypal-js'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
+import { useCart } from '@/store/use-cart'
 
 interface PaymentFormProps {
   orderId: string
@@ -18,6 +19,7 @@ function PayPalButtonWrapper({ orderId, amount }: PaymentFormProps) {
   const [{ isPending }] = usePayPalScriptReducer()
   const { toast } = useToast()
   const router = useRouter()
+  const cart = useCart()
 
   const createOrder = async () => {
     try {
@@ -74,6 +76,7 @@ function PayPalButtonWrapper({ orderId, amount }: PaymentFormProps) {
           description: 'Payment completed successfully!',
         })
         router.push(`/order-confirmation/${orderId}`)
+        cart.clearCart()
       } else {
         throw new Error('Payment was not completed')
       }
@@ -118,7 +121,7 @@ function PayPalButtonWrapper({ orderId, amount }: PaymentFormProps) {
 export function PaymentForm({ orderId, amount }: PaymentFormProps) {
   const initialOptions = {
     clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
-    currency: 'USD',
+    currency: 'GBP',
     intent: 'capture',
   }
 

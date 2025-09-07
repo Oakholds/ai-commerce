@@ -43,7 +43,7 @@ export function Footer() {
             <ul className='space-y-2'>
               <li>
                 <Link
-                  href='mailto:darasimiadebola10@gmail.com'
+                  href='mailto:o3foodstore0@gmail.com'
                   
                   className='text-gray-600 hover:text-gray-900'
                 >

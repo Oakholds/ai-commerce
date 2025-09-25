@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 
-const PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com' 
+const PAYPAL_BASE_URL = 'https://api.paypal.com' 
 
 
 // async function getPayPalAccessToken() {

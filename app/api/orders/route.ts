@@ -10,6 +10,8 @@ interface CartItem {
 }
 
 interface ShippingInfo {
+  fullName: string  // Added this since your form has it
+  email: string     // Added this since your form has it
   address: string
   city: string
   state: string
@@ -26,13 +28,6 @@ interface OrderBody {
 export async function POST(req: Request) {
   try {
     const session = await auth()
-
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized: User ID is required', {
-        status: 401,
-      })
-    }
-
     const body = await req.json()
     const { items, shippingInfo, total } = body as OrderBody
 
@@ -44,6 +39,13 @@ export async function POST(req: Request) {
 
     if (!shippingInfo) {
       return new NextResponse('Bad Request: Shipping information is required', {
+        status: 400,
+      })
+    }
+
+    // For guest orders, require email
+    if (!session?.user?.id && !shippingInfo.email) {
+      return new NextResponse('Bad Request: Email is required for guest orders', {
         status: 400,
       })
     }
@@ -87,38 +89,79 @@ export async function POST(req: Request) {
       )
     }
 
-    // Create shipping address
-    const address = await prisma.address.create({
-      data: {
-        street: shippingInfo.address,
-        city: shippingInfo.city,
-        state: shippingInfo.state,
-        postalCode: shippingInfo.zipCode,
-        country: shippingInfo.country,
+    // Create shipping address (for both guest and logged-in users)
+
+    
+    const addressData = {
+      street: shippingInfo.address,
+      city: shippingInfo.city,
+      state: shippingInfo.state,
+      postalCode: shippingInfo.zipCode,
+      country: shippingInfo.country,
+      // Only connect to user if they're logged in
+      ...(session?.user?.id && {
         user: {
           connect: {
             id: session.user.id,
           },
         },
-      },
+      }),
+    }
+
+        console.log('Creating address with:', addressData)
+    const address = await prisma.address.create({
+      data: addressData,
     })
+    console.log('Address created:', address.id)
+
 
     // Start a transaction to ensure all operations succeed or fail together
+const orderData = {
+      addressId: address.id,
+      total,
+      items: {
+        create: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      },
+      ...(session?.user?.id 
+        ? { userId: session.user.id }
+        : { 
+            guestEmail: shippingInfo.email,
+            guestName: shippingInfo.fullName 
+          }
+      ),
+    }
+    
+    console.log('Creating order with:', JSON.stringify(orderData, null, 2))
+
     const order = await prisma.$transaction(async (tx) => {
+
       // Create order with items
-      const newOrder = await tx.order.create({
-        data: {
-          userId: session.user.id,
-          addressId: address.id,
-          total,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
+      const orderData = {
+        addressId: address.id,
+        total,
+        items: {
+          create: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          })),
         },
+        // Add user ID if logged in, guest info if not
+        ...(session?.user?.id 
+          ? { userId: session.user.id }
+          : { 
+              guestEmail: shippingInfo.email,
+              guestName: shippingInfo.fullName 
+            }
+        ),
+      }
+
+      const newOrder = await tx.order.create({
+        data: orderData,
         include: {
           items: true,
           shippingAddress: true,
@@ -137,24 +180,33 @@ export async function POST(req: Request) {
         })
       }
 
-      // Clear the user's cart if it exists
-      await tx.cart
-        .delete({
-          where: { userId: session.user.id },
-        })
-        .catch(() => {
-          // Ignore error if cart doesn't exist
-        })
+      // Clear the user's cart if they're logged in and have a cart
+      if (session?.user?.id) {
+        await tx.cart
+          .delete({
+            where: { userId: session.user.id },
+          })
+          .catch(() => {
+            // Ignore error if cart doesn't exist
+          })
+      }
 
       return newOrder
     })
 
     return NextResponse.json({ orderId: order.id })
   } catch (error) {
-    console.error('[ORDERS_POST]', error)
-    if (error instanceof Error) {
-      return new NextResponse(`Error: ${error.message}`, { status: 500 })
-    }
-    return new NextResponse('Internal error', { status: 500 })
+  if (error === null || error === undefined) {
+    console.error('[ORDERS_POST] Caught null/undefined error')
+    return new NextResponse('Internal error - null exception', { status: 500 })
   }
+  
+  console.error('[ORDERS_POST] Error:', error)
+  console.error('[ORDERS_POST] Error type:', typeof error)
+  
+  if (error instanceof Error) {
+    return new NextResponse(`Error: ${error.message}`, { status: 500 })
+  }
+  return new NextResponse('Internal error', { status: 500 })
+}
 }

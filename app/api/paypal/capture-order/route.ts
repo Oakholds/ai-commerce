@@ -3,37 +3,38 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 
-const PAYPAL_BASE_URL = 'https://api.paypal.com' 
-
+const PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com'
 
 async function getPayPalAccessToken() {
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET
+  
+  console.log('Client ID length:', clientId?.length || 0)
+  console.log('Client Secret length:', clientSecret?.length || 0)
+  
   const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(
-        `${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-      ).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
     },
     body: 'grant_type=client_credentials',
   })
 
+  console.log('PayPal response status:', response.status)
+  
   if (!response.ok) {
-    throw new Error('Failed to get PayPal access token')
+    const errorText = await response.text()
+    console.log('PayPal error response:', errorText)
+    throw new Error(`PayPal auth failed: ${response.status} - ${errorText}`)
   }
-
+  
   const data = await response.json()
   return data.access_token
 }
-
 export async function POST(req: Request) {
   try {
     const session = await auth()
-
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
     const body = await req.json()
     const { orderID, orderId } = body
 
@@ -41,64 +42,96 @@ export async function POST(req: Request) {
       return new NextResponse('PayPal Order ID and Order ID are required', { status: 400 })
     }
 
-    // Get the order from database
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
         id: orderId,
-        userId: session.user.id,
-      },
+        OR: [
+          { userId: session?.user?.id || '' },
+          { userId: null, guestEmail: { not: null } }
+        ]
+      }
     })
 
     if (!order) {
       return new NextResponse('Order not found', { status: 404 })
     }
 
-    // Get PayPal access token
+    // FIXED: Check if payment is already completed
+    if (order.paymentStatus === 'COMPLETED') {
+      return NextResponse.json({ 
+        status: 'COMPLETED',
+        message: 'Order already paid'
+      })
+    }
+
     const accessToken = await getPayPalAccessToken()
 
-    // Capture the PayPal order
-    const response = await fetch(
-      `${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    )
+    const captureResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
 
-    if (!response.ok) {
-      const errorData = await response.json()
+    if (!captureResponse.ok) {
+      const errorData = await captureResponse.json()
       console.error('PayPal capture failed:', errorData)
+      
+      // Update payment status to failed
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: 'FAILED' },
+      })
+      
       throw new Error('Failed to capture PayPal payment')
     }
 
-    const captureData = await response.json()
+    const captureData = await captureResponse.json()
 
-    // Check if payment was successful
+    // FIXED: Only update status when payment is actually completed
     if (captureData.status === 'COMPLETED') {
-      // Update order status in database
       await prisma.order.update({
-        where: {
-          id: order.id,
-        },
+        where: { id: order.id },
         data: {
-          status: 'PROCESSING',
-          stripePaymentId: captureData.purchase_units[0].payments.captures[0].id,
-          updatedAt: new Date(),
+          paymentStatus: 'COMPLETED', // Mark as completed
+          stripePaymentId: captureData.id, // Store PayPal payment ID for reference
         },
       })
 
-      return NextResponse.json({
+      return NextResponse.json({ 
         status: 'COMPLETED',
-        captureId: captureData.purchase_units[0].payments.captures[0].id,
+        captureId: captureData.id 
       })
-    } else {
-      throw new Error(`Payment capture failed with status: ${captureData.status}`)
     }
+
+    // If not completed, update status accordingly
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: captureData.status === 'PENDING' ? 'PROCESSING' : 'FAILED',
+      },
+    })
+
+    return NextResponse.json({ 
+      status: captureData.status,
+      message: 'Payment not completed' 
+    })
+
   } catch (error) {
-    console.error('[PAYPAL_CAPTURE_ORDER_ERROR]', error)
+    console.error('[PAYPAL_CAPTURE_ERROR]', error)
+    
+    // Try to update order status to failed if possible
+    try {
+      const body = await req.json()
+      await prisma.order.update({
+        where: { id: body.orderId },
+        data: { paymentStatus: 'FAILED' },
+      })
+    } catch (updateError) {
+      console.error('Failed to update order status to failed:', updateError)
+    }
+    
     return new NextResponse('Internal error', { status: 500 })
   }
 }

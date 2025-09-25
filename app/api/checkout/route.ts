@@ -13,16 +13,16 @@ interface CheckoutItem {
 export async function POST(req: Request) {
   try {
     const session = await auth()
-
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
     const body = await req.json()
-    const { items, shippingAddress } = body
+    const { items, shippingAddress, guestInfo } = body
 
     if (!items?.length || !shippingAddress) {
       return new NextResponse('Bad request', { status: 400 })
+    }
+
+    // For guest orders, we need at least email for order confirmation
+    if (!session?.user && !guestInfo?.email) {
+      return new NextResponse('Email required for guest orders', { status: 400 })
     }
 
     // Calculate subtotal
@@ -31,21 +31,29 @@ export async function POST(req: Request) {
       0
     )
 
-    // Create order in database
+   
+
     const order = await prisma.order.create({
       data: {
-        userId: session.user.id,
-        status: 'PENDING',
-        total: subtotal,
-        addressId: shippingAddress.id,
-        items: {
-          create: items.map((item: CheckoutItem) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
+      status: 'PENDING',
+      total: subtotal,
+      addressId: shippingAddress.id,
+      items: {
+        create: items.map((item: CheckoutItem) => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
       },
+      // Add user ID if logged in, otherwise store guest info
+      ...(session?.user 
+        ? { userId: session.user.id }
+        : { 
+            guestEmail: guestInfo.email,
+            guestName: guestInfo.name || null 
+          }
+      )
+    },
     })
 
     // Calculate final amount including tax and shipping

@@ -32,6 +32,8 @@ interface Order {
     name: string | null
     email: string
   } | null
+  guestName: string | null
+  guestEmail: string | null
   items: {
     id: string
     quantity: number
@@ -212,9 +214,9 @@ export function OrdersTable({
               </TableCell>
               <TableCell>
                 <div className="flex flex-col">
-                  <span className="font-medium">{order.user?.name || 'N/A'}</span>
+                  <span className="font-medium">{order.user?.name || order.guestName  || 'N/A'}</span>
                   <span className="text-sm text-muted-foreground">
-                    {order.user?.email || 'N/A'}
+                    {order.user?.email || order.guestEmail  || 'N/A'}
                   </span>
                 </div>
               </TableCell>

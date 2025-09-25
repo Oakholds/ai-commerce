@@ -1,15 +1,11 @@
-import { redirect } from 'next/navigation'
+// import { redirect } from 'next/navigation'
 import { ShippingForm } from '@/components/checkout/shipping-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { auth } from '@/auth'
+// import { auth } from '@/auth'
 import { OrderSummary } from '@/components/checkout/order-summary'
 
 export default async function CheckoutPage() {
-  const session = await auth()
-
-  if (!session?.user) {
-    redirect('/api/auth/signin?callbackUrl=/checkout')
-  }
+  // No auth check - allow guests to checkout
 
   return (
     <div className='container max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8'>

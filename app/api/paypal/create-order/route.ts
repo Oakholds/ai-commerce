@@ -3,9 +3,34 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 
-const PAYPAL_BASE_URL = 'https://api.paypal.com' 
+const PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com' 
+
+
+// async function getPayPalAccessToken() {
+//   const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/x-www-form-urlencoded',
+//       Authorization: `Basic ${Buffer.from(
+//         `${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+//       ).toString('base64')}`,
+//     },
+//     body: 'grant_type=client_credentials',
+//   })
+
+//   if (!response.ok) {
+//     throw new Error('Failed to get PayPal access token')
+//   }
+
+//   const data = await response.json()
+//   return data.access_token
+// }
 
 async function getPayPalAccessToken() {
+  console.log('=== PayPal Auth Debug ===')
+  console.log('Client ID first 10 chars:', process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.substring(0, 10))
+  console.log('Secret first 10 chars:', process.env.PAYPAL_CLIENT_SECRET?.substring(0, 10))
+  
   const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
@@ -17,8 +42,12 @@ async function getPayPalAccessToken() {
     body: 'grant_type=client_credentials',
   })
 
+  console.log('PayPal auth response status:', response.status)
+  
   if (!response.ok) {
-    throw new Error('Failed to get PayPal access token')
+    const errorText = await response.text()
+    console.log('PayPal auth error response:', errorText)
+    throw new Error(`PayPal auth failed: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
@@ -28,11 +57,6 @@ async function getPayPalAccessToken() {
 export async function POST(req: Request) {
   try {
     const session = await auth()
-
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
     const body = await req.json()
     const { orderId, amount } = body
 
@@ -40,22 +64,19 @@ export async function POST(req: Request) {
       return new NextResponse('Order ID and amount are required', { status: 400 })
     }
 
-    // Get base URL from request
     const url = new URL(req.url)
     const baseUrl = `${url.protocol}//${url.host}`
 
-    // Get the order from database
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
         id: orderId,
-        userId: session.user.id,
+        OR: [
+          { userId: session?.user?.id || '' },
+          { userId: null, guestEmail: { not: null } }
+        ]
       },
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: { include: { product: true } },
         shippingAddress: true,
       },
     })
@@ -64,21 +85,18 @@ export async function POST(req: Request) {
       return new NextResponse('Order not found', { status: 404 })
     }
 
-    // If order is already paid, return error
-    if (order.stripePaymentId) {
+    // FIXED: Check payment status instead of stripePaymentId
+    if (order.paymentStatus === 'COMPLETED') {
       return new NextResponse('Order is already paid', { status: 400 })
     }
 
-    // Get PayPal access token
     const accessToken = await getPayPalAccessToken()
 
-    // Calculate amounts from actual items
     const itemTotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    const shipping = 10 // Fixed shipping cost
-    const tax = itemTotal * 0.1 // 10% tax
+    const shipping = 10
+    const tax = itemTotal * 0.1
     const total = (itemTotal + shipping + tax).toFixed(2)
 
-    // Create PayPal order
     const paypalOrder = {
       intent: 'CAPTURE',
       purchase_units: [
@@ -87,26 +105,14 @@ export async function POST(req: Request) {
             currency_code: 'GBP',
             value: total,
             breakdown: {
-              item_total: {
-                currency_code: 'GBP',
-                value: itemTotal.toFixed(2),
-              },
-              shipping: {
-                currency_code: 'GBP',
-                value: shipping.toFixed(2),
-              },
-              tax_total: {
-                currency_code: 'GBP',
-                value: tax.toFixed(2),
-              },
+              item_total: { currency_code: 'GBP', value: itemTotal.toFixed(2) },
+              shipping: { currency_code: 'GBP', value: shipping.toFixed(2) },
+              tax_total: { currency_code: 'GBP', value: tax.toFixed(2) },
             },
           },
           items: order.items.map((item) => ({
             name: item.product.name,
-            unit_amount: {
-              currency_code: 'GBP',
-              value: item.price.toFixed(2),
-            },
+            unit_amount: { currency_code: 'GBP', value: item.price.toFixed(2) },
             quantity: item.quantity.toString(),
           })),
           description: `Order #${order.id}`,
@@ -138,13 +144,12 @@ export async function POST(req: Request) {
 
     const paypalOrderData = await response.json()
 
-    // Update order with PayPal order ID
+    // FIXED: Store PayPal order ID separately, don't update payment status yet
     await prisma.order.update({
-      where: {
-        id: order.id,
-      },
+      where: { id: order.id },
       data: {
-        stripePaymentId: paypalOrderData.id,
+        paypalOrderId: paypalOrderData.id, // Store PayPal order ID separately
+        paymentStatus: 'PENDING' // Keep as pending until captured
       },
     })
 
@@ -154,5 +159,3 @@ export async function POST(req: Request) {
     return new NextResponse('Internal error', { status: 500 })
   }
 }
-
-

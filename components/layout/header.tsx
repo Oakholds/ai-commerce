@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, User, LogOut, X, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useSession, signIn, signOut } from 'next-auth/react'
+// import { useSession, signIn, signOut } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { CartBadge } from '@/components/layout/cart-badge'
 import {
   DropdownMenu,
@@ -148,11 +149,15 @@ export function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Button variant='default' onClick={() => signIn()}>
-                Sign In
-              </Button>
-            )}
+            ) 
+            : 
+            (
+              <br/>
+              // <Button variant='default' onClick={() => signIn()}>
+              //   Sign In
+              // </Button>
+            )
+            }
           </nav>
         </div>
       </div>

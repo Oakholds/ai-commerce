@@ -22,14 +22,14 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
   const { id } = await params
   const session = await auth()
 
-  if (!session?.user) {
-    redirect('/api/auth/signin')
-  }
-
-  const order = (await prisma.order.findUnique({
+  // Find order for both guest and logged-in users
+  const order = (await prisma.order.findFirst({
     where: {
       id: id,
-      userId: session.user.id,
+      OR: [
+        { userId: session?.user?.id || '' }, // Logged-in user orders
+        { userId: null, guestEmail: { not: null } } // Guest orders
+      ]
     },
     include: {
       items: {
@@ -106,6 +106,17 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
               {order.shippingAddress.country}
             </div>
           </div>
+
+          {/* Show contact info for guest orders */}
+          {order.guestEmail && (
+            <div className='space-y-2'>
+              <h2 className='text-lg font-semibold'>Contact Information</h2>
+              <div className='text-gray-500'>
+                {order.guestName && <p>{order.guestName}</p>}
+                <p>{order.guestEmail}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

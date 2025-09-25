@@ -72,9 +72,13 @@ export async function getRecentOrders(limit: number = 5) {
       total: true,
       status: true,
       createdAt: true,
+      guestName: true,    // Add this
+      guestEmail: true,   // Add this
       user: {
         select: {
+          id: true,       // Add this if needed
           name: true,
+          email: true,    // Add this if needed
         },
       },
     },

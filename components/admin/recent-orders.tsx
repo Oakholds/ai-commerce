@@ -27,6 +27,9 @@ interface Order {
   user: {
     name: string | null
   } | null // Added | null to handle null user
+  guestName: string | null   // Change from string to string | null
+  guestEmail: string | null  // Change from string to string | null
+  // ... other fields
   total: number
   status: OrderStatus
   createdAt: Date // Changed from Date to string
@@ -68,7 +71,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className='font-medium'>{order.id}</TableCell>
-                <TableCell>{order.user?.name || 'Anonymous'}</TableCell>
+               <TableCell>{order.user?.name || order.guestName || 'Anonymous'}</TableCell>
                 <TableCell>{formatCurrency(order.total)}</TableCell>
                 <TableCell>
                   <Badge

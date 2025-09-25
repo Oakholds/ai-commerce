@@ -16,21 +16,16 @@ export default async function PaymentPage({ params }: PageProps) {
   const session = await auth()
   const { id } = await params
 
-  if (!session?.user) {
-    redirect('/api/auth/signin?callbackUrl=/payment/' + id)
-  }
-
-  const order = await prisma.order.findUnique({
+  const order = await prisma.order.findFirst({
     where: {
       id: id,
-      userId: session.user.id,
+      OR: [
+        { userId: session?.user?.id || '' },
+        { userId: null, guestEmail: { not: null } }
+      ]
     },
     include: {
-      items: {
-        include: {
-          product: true,
-        },
-      },
+      items: { include: { product: true } },
       shippingAddress: true,
     },
   })
@@ -39,15 +34,14 @@ export default async function PaymentPage({ params }: PageProps) {
     redirect('/')
   }
 
-  // If order is already paid, redirect to confirmation
-  if (order.stripePaymentId) {
+  // FIXED: Check payment status instead of just stripePaymentId
+  if (order.paymentStatus === 'COMPLETED') {
     redirect(`/order-confirmation/${order.id}`)
   }
 
-  // Calculate final amount including tax and shipping
   const subtotal = order.total
-  const shipping = 10 // Fixed shipping cost
-  const tax = subtotal * 0.1 // 10% tax
+  const shipping = 10
+  const tax = subtotal * 0.1
   const finalAmount = subtotal + shipping + tax
 
   return (
@@ -64,7 +58,6 @@ export default async function PaymentPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </div>
-
         <div>
           <Card>
             <CardHeader>
